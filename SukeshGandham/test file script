@@ -1,60 +1,43 @@
-# Define your project views root path
-$rootPath = "C:\Path\To\Your\Project\Views"
+# Bootstrap 4 to 5 Migration Script with Backup
 
-# Load all .cshtml files
+# Get the root path of the current directory
+$rootPath = Resolve-Path .\
+
+# Define a backup directory with timestamp
+$backupDir = "$rootPath\Backup_$(Get-Date -Format yyyyMMddHHmmss)"
+New-Item -Path $backupDir -ItemType Directory -Force | Out-Null
+
+# Find all .cshtml files in the project
 $files = Get-ChildItem -Path $rootPath -Recurse -Include *.cshtml
 
 foreach ($file in $files) {
-    Write-Host "🔧 Processing $($file.FullName)..."
+    $filePath = $file.FullName
+    $backupPath = Join-Path $backupDir $file.Name
 
-    $content = Get-Content $file.FullName -Raw
+    # Backup the original file
+    Copy-Item $filePath -Destination $backupPath -Force
 
-    # ==============================
-    # Bootstrap 4 ➡ Bootstrap 5 Replacements
-    # ==============================
-
-    # Layout spacing
-    $content = $content -replace '\bform-group\b', 'mb-3'
-    $content = $content -replace '\bform-inline\b', 'row g-3 align-items-center'
-
-    # Float utilities
-    $content = $content -replace '\bfloat-right\b', 'float-end'
-    $content = $content -replace '\bfloat-left\b', 'float-start'
-
-    # Button utilities
-    $content = $content -replace '\bbtn-block\b', 'w-100'
-
-    # Custom checkboxes & radios → form-check
-    $content = $content -replace '\bcustom-control\b', 'form-check'
-    $content = $content -replace '\bcustom-checkbox\b', 'form-check'
-    $content = $content -replace '\bcustom-radio\b', 'form-check'
-    $content = $content -replace '\bcustom-control-input\b', 'form-check-input'
-    $content = $content -replace '\bcustom-control-label\b', 'form-check-label'
-
-    # Input group text (input-group-prepend/append removed)
-    $content = $content -replace '\binput-group-prepend\b', ''
-    $content = $content -replace '\binput-group-append\b', ''
-    $content = $content -replace '\binput-group-text\b', 'form-control'
-
-    # Card headers and footers spacing fix (optional)
-    $content = $content -replace '\bcard-header\b', 'card-header py-3'
-    $content = $content -replace '\bcard-footer\b', 'card-footer py-3'
-
-    # Navbar changes
-    $content = $content -replace '\bnavbar-light\b', 'navbar-light bg-light'
-    $content = $content -replace '\bnavbar-dark\b', 'navbar-dark bg-dark'
-    $content = $content -replace '\bml-auto\b', 'ms-auto'
-    $content = $content -replace '\bmr-auto\b', 'me-auto'
-
-    # Grid updates
-    $content = $content -replace '\bcol-form-label\b', 'col-form-label'
-    $content = $content -replace '\bform-row\b', 'row'
-
-    # Label update if not already has class
-    $content = $content -replace '<label([^>]*)(?<!form-label)>', '<label class="form-label"$1>'
-
-    # Write back updated file
-    Set-Content -Path $file.FullName -Value $content -Encoding UTF8
+    # Read, replace, and write the updated file content
+    (Get-Content $filePath) |
+        ForEach-Object { $_ -replace '\bform-group\b', 'mb-3' } |
+        ForEach-Object { $_ -replace '\bfloat-right\b', 'float-end' } |
+        ForEach-Object { $_ -replace '\bfloat-left\b', 'float-start' } |
+        ForEach-Object { $_ -replace '\bbtn-block\b', 'w-100' } |
+        ForEach-Object { $_ -replace '\bcustom-control\b', 'form-check' } |
+        ForEach-Object { $_ -replace '\bcustom-checkbox\b', 'form-check' } |
+        ForEach-Object { $_ -replace '\bcustom-radio\b', 'form-check' } |
+        ForEach-Object { $_ -replace '\bcustom-control-input\b', 'form-check-input' } |
+        ForEach-Object { $_ -replace '\bcustom-control-label\b', 'form-check-label' } |
+        ForEach-Object { $_ -replace '\binput-group-prepend\b', '' } |
+        ForEach-Object { $_ -replace '\binput-group-append\b', '' } |
+        ForEach-Object { $_ -replace '\binput-group-text\b', 'form-control' } |
+        ForEach-Object { $_ -replace '\bcard-header\b', 'card-header py-3' } |
+        ForEach-Object { $_ -replace '\bcard-footer\b', 'card-footer py-3' } |
+        ForEach-Object { $_ -replace '\bnavbar-light\b', 'navbar-light bg-light' } |
+        ForEach-Object { $_ -replace '\bnavbar-dark\b', 'navbar-dark bg-dark' } |
+        ForEach-Object { $_ -replace '\bml-auto\b', 'ms-auto' } |
+        ForEach-Object { $_ -replace '\bmr-auto\b', 'me-auto' } |
+        ForEach-Object { $_ -replace '\bform-row\b', 'row' } |
+        Set-Content -Path $filePath
 }
-
-Write-Host "✅ Bootstrap class updates complete!"
+    
